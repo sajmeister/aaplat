@@ -1,0 +1,23 @@
+import { drizzle } from 'drizzle-orm/libsql';
+import { createClient } from '@libsql/client';
+import * as schema from './schema';
+
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is required');
+}
+
+if (!process.env.DATABASE_AUTH_TOKEN) {
+  throw new Error('DATABASE_AUTH_TOKEN environment variable is required');
+}
+
+// Create the client
+const client = createClient({
+  url: process.env.DATABASE_URL,
+  authToken: process.env.DATABASE_AUTH_TOKEN,
+});
+
+// Create the database instance
+export const db = drizzle(client, { schema });
+
+// Export the client for direct access if needed
+export { client }; 
