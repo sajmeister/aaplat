@@ -2,18 +2,16 @@ import { drizzle } from 'drizzle-orm/libsql';
 import { createClient } from '@libsql/client';
 import * as schema from './schema';
 
-if (!process.env.DATABASE_URL) {
+const DATABASE_URL = process.env.DATABASE_URL || 'file:local.db';
+
+if (!DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is required');
 }
 
-if (!process.env.DATABASE_AUTH_TOKEN) {
-  throw new Error('DATABASE_AUTH_TOKEN environment variable is required');
-}
-
-// Create the client
+// Create the client - handles both local SQLite and Turso
 const client = createClient({
-  url: process.env.DATABASE_URL,
-  authToken: process.env.DATABASE_AUTH_TOKEN,
+  url: DATABASE_URL,
+  authToken: process.env.DATABASE_AUTH_TOKEN, // Only needed for Turso
 });
 
 // Create the database instance
