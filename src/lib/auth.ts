@@ -5,18 +5,34 @@ import Google from 'next-auth/providers/google';
 import { db } from './db';
 import { accounts, sessions, users, verificationTokens } from './db/schema';
 
-// Debug environment variables
-console.log('GitHub Client ID:', process.env.GITHUB_CLIENT_ID);
-console.log('GitHub Client ID length:', process.env.GITHUB_CLIENT_ID?.length);
-console.log('GitHub Client ID (encoded):', encodeURIComponent(process.env.GITHUB_CLIENT_ID || ''));
+// Debug environment variables (remove in production)
+if (process.env.NODE_ENV === 'development') {
+  console.log('GitHub Client ID:', process.env.GITHUB_CLIENT_ID);
+  console.log('GitHub Client ID length:', process.env.GITHUB_CLIENT_ID?.length);
+  console.log('NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET);
+}
 
 export const authConfig: NextAuthConfig = {
-  adapter: DrizzleAdapter(db, {
-    usersTable: users,
-    accountsTable: accounts,
-    sessionsTable: sessions,
-    verificationTokensTable: verificationTokens,
-  }),
+  // Use database adapter only if we have a real database
+  ...(process.env.NODE_ENV === 'development' || process.env.DATABASE_URL !== 'file:local.db' 
+    ? {
+        adapter: DrizzleAdapter(db, {
+          usersTable: users,
+          accountsTable: accounts,
+          sessionsTable: sessions,
+          verificationTokensTable: verificationTokens,
+        }),
+        session: {
+          strategy: 'database',
+        },
+      }
+    : {
+        // For production with in-memory database, use JWT sessions
+        session: {
+          strategy: 'jwt',
+        },
+      }
+  ),
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
@@ -33,21 +49,19 @@ export const authConfig: NextAuthConfig = {
     error: '/auth/error',
   },
   callbacks: {
-    async session({ session, user }) {
+    async session({ session, token, user }) {
       if (session.user) {
-        session.user.id = user.id;
+        // For JWT strategy, use token.sub as user ID
+        session.user.id = token.sub || user?.id;
       }
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
       }
       return token;
     },
-  },
-  session: {
-    strategy: 'database',
   },
   debug: process.env.NODE_ENV === 'development',
 };
