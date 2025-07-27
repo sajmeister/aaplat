@@ -1,47 +1,47 @@
 import NextAuth, { NextAuthConfig } from 'next-auth';
-import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
-import { db } from './db';
-import { accounts, sessions, users, verificationTokens } from './db/schema';
 
 // Debug environment variables (remove in production)
 if (process.env.NODE_ENV === 'development') {
   console.log('GitHub Client ID:', process.env.GITHUB_CLIENT_ID);
-  console.log('GitHub Client ID length:', process.env.GITHUB_CLIENT_ID?.length);
   console.log('NEXTAUTH_SECRET exists:', !!process.env.NEXTAUTH_SECRET);
+  console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
+}
+
+// Check required environment variables
+const requiredEnvVars = {
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  GITHUB_CLIENT_ID: process.env.GITHUB_CLIENT_ID,
+  GITHUB_CLIENT_SECRET: process.env.GITHUB_CLIENT_SECRET,
+};
+
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([key, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0) {
+  console.error('Missing required environment variables:', missingVars);
 }
 
 export const authConfig: NextAuthConfig = {
-  // Use database adapter only if we have a real database
-  ...(process.env.NODE_ENV === 'development' || process.env.DATABASE_URL !== 'file:local.db' 
-    ? {
-        adapter: DrizzleAdapter(db, {
-          usersTable: users,
-          accountsTable: accounts,
-          sessionsTable: sessions,
-          verificationTokensTable: verificationTokens,
-        }),
-        session: {
-          strategy: 'database',
-        },
-      }
-    : {
-        // For production with in-memory database, use JWT sessions
-        session: {
-          strategy: 'jwt',
-        },
-      }
-  ),
+  // Use JWT sessions for production (simpler and more reliable)
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   providers: [
     GitHub({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
     }),
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [Google({
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        })]
+      : []
+    ),
   ],
   pages: {
     signIn: '/auth/signin',
@@ -49,18 +49,23 @@ export const authConfig: NextAuthConfig = {
     error: '/auth/error',
   },
   callbacks: {
-    async session({ session, token, user }) {
-      if (session.user) {
-        // For JWT strategy, use token.sub as user ID
-        session.user.id = token.sub || user?.id;
-      }
-      return session;
-    },
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.image = user.image;
       }
       return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.sub!;
+        session.user.email = token.email!;
+        session.user.name = token.name!;
+        session.user.image = token.image as string;
+      }
+      return session;
     },
   },
   debug: process.env.NODE_ENV === 'development',
