@@ -46,10 +46,18 @@ export class CloudflareR2Service {
       sourceCode: '',
     };
 
+    console.log('🔄 CloudflareR2Service.uploadAgentFiles called');
+    console.log(`📁 Base key: ${baseKey}`);
+    console.log(`📊 Files to upload: ${Object.keys(files).length}`);
+    console.log(`📋 File names: ${Object.keys(files).join(', ')}`);
+
     try {
       for (const [fileName, fileContent] of Object.entries(files)) {
         const key = `${baseKey}/${fileName}`;
+        console.log(`🚀 Uploading file: ${fileName} → ${key}`);
+        
         const result = await this.uploadFile(key, fileContent);
+        console.log(`✅ Upload result for ${fileName}:`, result);
         
         // Map files to structure
         if (fileName.includes('main.') || fileName.includes('index.') || fileName.includes('app.')) {
@@ -65,6 +73,8 @@ export class CloudflareR2Service {
         }
       }
 
+      console.log(`🎉 All files uploaded successfully!`);
+      console.log(`📂 Final uploadedFiles structure:`, uploadedFiles);
       return uploadedFiles;
     } catch (error) {
       console.error('Failed to upload agent files:', error);
@@ -78,24 +88,40 @@ export class CloudflareR2Service {
     content: File | Buffer | string,
     contentType?: string
   ): Promise<FileUploadResult> {
+    console.log(`🔧 R2 uploadFile called for key: ${key}`);
+    console.log(`🔧 R2 Configuration check:`);
+    console.log(`  - BUCKET_NAME: ${BUCKET_NAME}`);
+    console.log(`  - R2_ENDPOINT: ${process.env.CLOUDFLARE_R2_ENDPOINT}`);
+    console.log(`  - R2_ACCESS_KEY_ID: ${process.env.CLOUDFLARE_R2_ACCESS_KEY_ID ? 'SET' : 'NOT SET'}`);
+    console.log(`  - R2_SECRET_ACCESS_KEY: ${process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY ? 'SET' : 'NOT SET'}`);
+    
     try {
       let body: Buffer | string;
       let size: number;
       let finalContentType: string;
 
       if (content instanceof File) {
+        console.log(`📄 Processing File object: ${content.name}, size: ${content.size}`);
         body = Buffer.from(await content.arrayBuffer());
         size = content.size;
         finalContentType = content.type || contentType || 'application/octet-stream';
       } else if (Buffer.isBuffer(content)) {
+        console.log(`📄 Processing Buffer, size: ${content.length}`);
         body = content;
         size = content.length;
         finalContentType = contentType || 'application/octet-stream';
       } else {
+        console.log(`📄 Processing string, length: ${content.length}`);
         body = content;
         size = Buffer.byteLength(content, 'utf8');
         finalContentType = contentType || 'text/plain';
       }
+
+      console.log(`📦 Upload params:`);
+      console.log(`  - Bucket: ${BUCKET_NAME}`);
+      console.log(`  - Key: ${key}`);
+      console.log(`  - ContentType: ${finalContentType}`);
+      console.log(`  - Size: ${size} bytes`);
 
       const upload = new Upload({
         client: r2Client,
@@ -110,7 +136,27 @@ export class CloudflareR2Service {
         },
       });
 
+      console.log(`⏳ Starting R2 upload...`);
       const result = await upload.done();
+      console.log(`✅ R2 upload completed:`, result);
+      
+      // Verify the upload by checking if the file exists
+      try {
+        console.log(`🔍 Verifying upload by checking file existence...`);
+        const headCommand = new HeadObjectCommand({
+          Bucket: BUCKET_NAME,
+          Key: key,
+        });
+        const headResult = await r2Client.send(headCommand);
+        console.log(`✅ File verified in R2:`, {
+          ContentLength: headResult.ContentLength,
+          ContentType: headResult.ContentType,
+          LastModified: headResult.LastModified,
+          ETag: headResult.ETag
+        });
+      } catch (verifyError) {
+        console.error(`⚠️ File upload succeeded but verification failed:`, verifyError);
+      }
       
       return {
         key,
@@ -119,8 +165,20 @@ export class CloudflareR2Service {
         contentType: finalContentType,
       };
     } catch (error) {
-      console.error('Failed to upload file:', error);
-      throw new Error(`Failed to upload file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`❌ R2 upload failed for key: ${key}`);
+      console.error(`❌ Error type: ${error?.constructor?.name}`);
+      console.error(`❌ Error message: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`❌ Full error:`, error);
+      
+      // Log additional details for AWS SDK errors
+      if (error && typeof error === 'object' && 'name' in error) {
+        console.error(`❌ AWS SDK Error Name: ${error.name}`);
+        if ('Code' in error) console.error(`❌ AWS SDK Error Code: ${error.Code}`);
+        if ('statusCode' in error) console.error(`❌ AWS SDK Status Code: ${error.statusCode}`);
+        if ('requestId' in error) console.error(`❌ AWS SDK Request ID: ${error.requestId}`);
+      }
+      
+      throw new Error(`Failed to upload file to R2: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
