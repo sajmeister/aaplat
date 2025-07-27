@@ -50,7 +50,33 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     console.log(`📊 File names: ${Object.keys(files).join(', ')}`);
 
     if (Object.keys(files).length === 0) {
-      throw new ApiError('No valid files provided', 400);
+      // Return success even with no files - files are optional for now
+      console.log('⚠️ No files provided, but continuing (files are optional)');
+      return createSuccessResponse({
+        agentId,
+        files: {},
+        message: 'Agent created successfully (no files uploaded - R2 storage not configured)',
+      });
+    }
+
+    // Check if R2 is configured
+    const r2Configured = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID && 
+                        process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY && 
+                        process.env.CLOUDFLARE_R2_BUCKET_NAME && 
+                        process.env.CLOUDFLARE_R2_ENDPOINT;
+    
+    if (!r2Configured) {
+      console.log('⚠️ Cloudflare R2 not configured, skipping file upload');
+      console.log('- R2_ACCESS_KEY_ID:', !!process.env.CLOUDFLARE_R2_ACCESS_KEY_ID);
+      console.log('- R2_SECRET_ACCESS_KEY:', !!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY);
+      console.log('- R2_BUCKET_NAME:', !!process.env.CLOUDFLARE_R2_BUCKET_NAME);
+      console.log('- R2_ENDPOINT:', !!process.env.CLOUDFLARE_R2_ENDPOINT);
+      
+      return createSuccessResponse({
+        agentId,
+        files: { message: 'Files received but not uploaded (R2 storage not configured)' },
+        message: `Files validated but not uploaded (${Object.keys(files).length} files) - R2 storage not configured`,
+      });
     }
 
     // Upload files to R2
