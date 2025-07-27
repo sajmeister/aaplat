@@ -64,6 +64,26 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     console.log(`📊 Final file count: ${Object.keys(files).length}`);
     console.log(`📊 File names: ${Object.keys(files).join(', ')}`);
 
+    // Check if R2 is configured
+    const r2Configured = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID && 
+                        process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY && 
+                        process.env.CLOUDFLARE_R2_BUCKET_NAME && 
+                        process.env.CLOUDFLARE_R2_ENDPOINT;
+    
+    // Create R2 config status for debugging
+    const r2ConfigStatus = {
+      CLOUDFLARE_R2_ACCESS_KEY_ID: !!process.env.CLOUDFLARE_R2_ACCESS_KEY_ID,
+      CLOUDFLARE_R2_SECRET_ACCESS_KEY: !!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
+      CLOUDFLARE_R2_BUCKET_NAME: !!process.env.CLOUDFLARE_R2_BUCKET_NAME,
+      CLOUDFLARE_R2_ENDPOINT: !!process.env.CLOUDFLARE_R2_ENDPOINT,
+      overallConfigured: r2Configured,
+      bucketName: process.env.CLOUDFLARE_R2_BUCKET_NAME || 'NOT_SET',
+      endpoint: process.env.CLOUDFLARE_R2_ENDPOINT ? 
+        process.env.CLOUDFLARE_R2_ENDPOINT.substring(0, 30) + '...' : 'NOT_SET'
+    };
+    
+    console.log('🔍 R2 Configuration Status:', r2ConfigStatus);
+
     if (Object.keys(files).length === 0) {
       // Return success even with no files - files are optional for now
       console.log('⚠️ No files provided, but continuing (files are optional)');
@@ -71,30 +91,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         agentId,
         files: {},
         message: 'Agent created successfully (no files uploaded - R2 storage not configured)',
+        r2Config: r2ConfigStatus,
       });
     }
-
-    // Check if R2 is configured
-    const r2Configured = process.env.CLOUDFLARE_R2_ACCESS_KEY_ID && 
-                        process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY && 
-                        process.env.CLOUDFLARE_R2_BUCKET_NAME && 
-                        process.env.CLOUDFLARE_R2_ENDPOINT;
     
-    console.log('🔍 R2 Configuration Status:');
-    console.log('- R2_ACCESS_KEY_ID:', !!process.env.CLOUDFLARE_R2_ACCESS_KEY_ID);
-    console.log('- R2_SECRET_ACCESS_KEY:', !!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY);
-    console.log('- R2_BUCKET_NAME:', !!process.env.CLOUDFLARE_R2_BUCKET_NAME);
-    console.log('- R2_ENDPOINT:', !!process.env.CLOUDFLARE_R2_ENDPOINT);
-    console.log('- Overall R2 Configured:', r2Configured);
-    
-    if (!r2Configured) {
-      console.log('⚠️ Cloudflare R2 not configured, skipping file upload');
-      return createSuccessResponse({
-        agentId,
-        files: { message: 'Files received but not uploaded (R2 storage not configured)' },
-        message: `Files validated but not uploaded (${Object.keys(files).length} files) - R2 storage not configured`,
-      });
-    }
+          if (!r2Configured) {
+        console.log('⚠️ Cloudflare R2 not configured, skipping file upload');
+        return createSuccessResponse({
+          agentId,
+          files: { message: 'Files received but not uploaded (R2 storage not configured)' },
+          message: `Files validated but not uploaded (${Object.keys(files).length} files) - R2 storage not configured`,
+          r2Config: r2ConfigStatus,
+        });
+      }
 
     // Upload files to R2
     console.log('🚀 R2 is configured - attempting file upload...');
@@ -107,22 +116,24 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
         session.user!.id!
       );
 
-      console.log('✅ R2 upload successful:', uploadResult);
-      
-      return createSuccessResponse({
-        agentId,
-        files: uploadResult,
-        message: `Successfully uploaded ${Object.keys(files).length} files to Cloudflare R2`,
-      });
+              console.log('✅ R2 upload successful:', uploadResult);
+        
+        return createSuccessResponse({
+          agentId,
+          files: uploadResult,
+          message: `Successfully uploaded ${Object.keys(files).length} files to Cloudflare R2`,
+          r2Config: r2ConfigStatus,
+        });
     } catch (uploadError) {
       console.error('❌ R2 upload failed:', uploadError);
       
-      // Fallback: Return success but indicate upload failed
-      return createSuccessResponse({
-        agentId,
-        files: { error: 'Upload failed', details: uploadError instanceof Error ? uploadError.message : 'Unknown error' },
-        message: `Agent created but file upload failed (${Object.keys(files).length} files) - ${uploadError instanceof Error ? uploadError.message : 'R2 upload error'}`,
-      });
+              // Fallback: Return success but indicate upload failed
+        return createSuccessResponse({
+          agentId,
+          files: { error: 'Upload failed', details: uploadError instanceof Error ? uploadError.message : 'Unknown error' },
+          message: `Agent created but file upload failed (${Object.keys(files).length} files) - ${uploadError instanceof Error ? uploadError.message : 'R2 upload error'}`,
+          r2Config: r2ConfigStatus,
+        });
     }
 
   } catch (error) {

@@ -89,6 +89,9 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
     addDebugLog(`🚀 Starting file upload for agent: ${agentId}`);
     addDebugLog(`📊 Files available: ${files.length}`);
     
+    // Check and log R2 configuration status
+    addDebugLog('🔍 Checking R2 environment variables...');
+    
     if (files.length === 0) {
       addDebugLog('⚠️ No files to upload');
       return;
@@ -137,12 +140,37 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
         addDebugLog(`❌ Upload failed: ${JSON.stringify(error)}`);
         updateDebugData('uploadResponse', { status: response.status, error });
         updateDebugData('errors', [error.error || 'Upload failed']);
+        
+        // Extract and display R2 configuration if available even in error case
+        if (error.data?.r2Config) {
+          addDebugLog('🔧 R2 Configuration Status (Error Case):');
+          const r2Config = error.data.r2Config;
+          addDebugLog(`  - ACCESS_KEY_ID: ${r2Config.CLOUDFLARE_R2_ACCESS_KEY_ID ? '✅ SET' : '❌ NOT SET'}`);
+          addDebugLog(`  - SECRET_ACCESS_KEY: ${r2Config.CLOUDFLARE_R2_SECRET_ACCESS_KEY ? '✅ SET' : '❌ NOT SET'}`);
+          addDebugLog(`  - BUCKET_NAME: ${r2Config.CLOUDFLARE_R2_BUCKET_NAME ? '✅ SET' : '❌ NOT SET'} (${r2Config.bucketName})`);
+          addDebugLog(`  - ENDPOINT: ${r2Config.CLOUDFLARE_R2_ENDPOINT ? '✅ SET' : '❌ NOT SET'} (${r2Config.endpoint})`);
+          addDebugLog(`  - Overall Configured: ${r2Config.overallConfigured ? '✅ YES' : '❌ NO'}`);
+          updateDebugData('r2Config', r2Config);
+        }
+        
         throw new Error(error.error || 'Upload failed');
       }
 
       const result = await response.json();
       addDebugLog(`✅ Upload successful: ${JSON.stringify(result)}`);
       updateDebugData('uploadResponse', { status: response.status, result });
+      
+      // Extract and display R2 configuration if available
+      if (result.data?.r2Config) {
+        addDebugLog('🔧 R2 Configuration Status:');
+        const r2Config = result.data.r2Config;
+        addDebugLog(`  - ACCESS_KEY_ID: ${r2Config.CLOUDFLARE_R2_ACCESS_KEY_ID ? '✅ SET' : '❌ NOT SET'}`);
+        addDebugLog(`  - SECRET_ACCESS_KEY: ${r2Config.CLOUDFLARE_R2_SECRET_ACCESS_KEY ? '✅ SET' : '❌ NOT SET'}`);
+        addDebugLog(`  - BUCKET_NAME: ${r2Config.CLOUDFLARE_R2_BUCKET_NAME ? '✅ SET' : '❌ NOT SET'} (${r2Config.bucketName})`);
+        addDebugLog(`  - ENDPOINT: ${r2Config.CLOUDFLARE_R2_ENDPOINT ? '✅ SET' : '❌ NOT SET'} (${r2Config.endpoint})`);
+        addDebugLog(`  - Overall Configured: ${r2Config.overallConfigured ? '✅ YES' : '❌ NO'}`);
+        updateDebugData('r2Config', r2Config);
+      }
       
       setUploadProgress('Upload complete!');
     } catch (error) {
