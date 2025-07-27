@@ -106,19 +106,38 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
       addDebugLog(`📝 Added agentId to FormData: ${agentId}`);
 
       let validFileCount = 0;
+      let invalidFileCount = 0;
+      let emptyFileCount = 0;
+      
+      addDebugLog(`🔍 Frontend File Processing:`);
+      addDebugLog(`  - Total files to process: ${files.length}`);
+      
       files.forEach((file) => {
-        addDebugLog(`🔍 Processing file: ${file.name} (valid: ${file.valid}, size: ${file.size})`);
+        addDebugLog(`🔍 Processing file: ${file.name} (valid: ${file.valid}, size: ${file.size}, type: ${file.type})`);
+        
+        if (file.size === 0) {
+          emptyFileCount++;
+          addDebugLog(`  ⚠️ File ${file.name} is empty (0 bytes) - skipping`);
+          return;
+        }
+        
         if (file.valid) {
           // Use filename as the key (not 'files')
           formDataUpload.append(file.name, file);
-          addDebugLog(`📁 Added file to FormData: ${file.name} (${file.size} bytes)`);
+          addDebugLog(`  ✅ Added file to FormData: ${file.name} (${file.size} bytes)`);
           validFileCount++;
         } else {
-          addDebugLog(`❌ Skipping invalid file: ${file.name} - ${file.error}`);
+          invalidFileCount++;
+          addDebugLog(`  ❌ Skipping invalid file: ${file.name} - ${file.error}`);
         }
       });
 
-      addDebugLog(`📊 Total valid files added to FormData: ${validFileCount}`);
+      addDebugLog(`📊 Frontend File Summary:`);
+      addDebugLog(`  - Total files: ${files.length}`);
+      addDebugLog(`  - Valid files: ${validFileCount}`);
+      addDebugLog(`  - Invalid files: ${invalidFileCount}`);
+      addDebugLog(`  - Empty files: ${emptyFileCount}`);
+      addDebugLog(`  - Files added to FormData: ${validFileCount}`);
       
       if (validFileCount === 0) {
         addDebugLog('⚠️ No valid files to upload');

@@ -40,26 +40,49 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     console.log('🔍 Form Data Debug:');
     console.log('- Form data entries count:', Array.from(formData.entries()).length);
     
+    let fileCount = 0;
+    let validFileCount = 0;
+    let invalidFileCount = 0;
+    let emptyFileCount = 0;
+    
     for (const [key, value] of formData.entries()) {
       console.log(`- Entry: ${key} = ${value instanceof File ? `File(${value.name}, ${value.size} bytes)` : value}`);
       
-      if (value instanceof File && value.size > 0) {
+      if (value instanceof File) {
+        fileCount++;
         console.log(`  📁 Processing file: ${value.name} (${value.size} bytes)`);
+        
+        if (value.size === 0) {
+          emptyFileCount++;
+          console.log(`  ⚠️ File ${value.name} skipped (empty file, size: 0)`);
+          continue;
+        }
         
         // Validate each file
         const validation = validateAgentFile(value);
-        console.log(`  ✅ Validation result: ${JSON.stringify(validation)}`);
+        console.log(`  🔍 Validation result: ${JSON.stringify(validation)}`);
         
         if (!validation.valid) {
+          invalidFileCount++;
+          console.log(`  ❌ File ${value.name} failed validation: ${validation.error}`);
           throw new ApiError(`Invalid file ${value.name}: ${validation.error}`, 400);
         }
         
         files[value.name] = value;
+        validFileCount++;
         console.log(`  ✅ File added to upload list: ${value.name}`);
-      } else if (value instanceof File) {
-        console.log(`  ⚠️ File ${value.name} skipped (size: ${value.size})`);
+      } else {
+        console.log(`  ℹ️ Non-file entry: ${key} = ${value}`);
       }
     }
+    
+    console.log(`📊 File Processing Summary:`);
+    console.log(`  - Total entries processed: ${Array.from(formData.entries()).length}`);
+    console.log(`  - Files detected: ${fileCount}`);
+    console.log(`  - Valid files: ${validFileCount}`);
+    console.log(`  - Invalid files: ${invalidFileCount}`);
+    console.log(`  - Empty files: ${emptyFileCount}`);
+    console.log(`  - Final files object size: ${Object.keys(files).length}`);
 
     console.log(`📊 Final file count: ${Object.keys(files).length}`);
     console.log(`📊 File names: ${Object.keys(files).join(', ')}`);
@@ -76,7 +99,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       CLOUDFLARE_R2_SECRET_ACCESS_KEY: !!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY,
       CLOUDFLARE_R2_BUCKET_NAME: !!process.env.CLOUDFLARE_R2_BUCKET_NAME,
       CLOUDFLARE_R2_ENDPOINT: !!process.env.CLOUDFLARE_R2_ENDPOINT,
-      overallConfigured: r2Configured,
+      overallConfigured: !!r2Configured, // Fix: Convert to boolean
       bucketName: process.env.CLOUDFLARE_R2_BUCKET_NAME || 'NOT_SET',
       endpoint: process.env.CLOUDFLARE_R2_ENDPOINT ? 
         process.env.CLOUDFLARE_R2_ENDPOINT.substring(0, 30) + '...' : 'NOT_SET'
@@ -90,7 +113,9 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       return createSuccessResponse({
         agentId,
         files: {},
-        message: 'Agent created successfully (no files uploaded - R2 storage not configured)',
+        message: r2Configured 
+          ? 'Agent created successfully (no files were uploaded - no valid files detected in request)'
+          : 'Agent created successfully (no files uploaded - R2 storage not configured)',
         r2Config: r2ConfigStatus,
       });
     }
