@@ -1,0 +1,25 @@
+{
+  "name": "simple-datetime-agent",
+  "version": "1.0.0",
+  "description": "A simple AI agent that returns the current date and time via API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "ai-agent",
+    "nodejs",
+    "express",
+    "datetime",
+    "api"
+  ],
+  "author": "AI Agent Platform",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
