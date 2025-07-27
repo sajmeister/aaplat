@@ -45,9 +45,7 @@ export default async function HomePage() {
       <main className="relative z-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
-            <Badge className="mb-4" variant="secondary">
-              🚀 Currently in Development - Week 2 Complete
-            </Badge>
+
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               Deploy AI Agents
               <span className="block text-blue-600">with Ease</span>
@@ -109,7 +107,7 @@ export default async function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Badge variant="secondary">Week 4</Badge>
+                <Badge variant="secondary">Coming Soon</Badge>
               </CardContent>
             </Card>
 
@@ -122,7 +120,7 @@ export default async function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Badge variant="secondary">Week 3</Badge>
+                <Badge variant="secondary">Coming Soon</Badge>
               </CardContent>
             </Card>
 
@@ -135,7 +133,7 @@ export default async function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Badge variant="default">Week 2 ✅</Badge>
+                <Badge variant="default">Available ✅</Badge>
               </CardContent>
             </Card>
 
@@ -148,7 +146,7 @@ export default async function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Badge variant="secondary">Week 8</Badge>
+                <Badge variant="secondary">Coming Soon</Badge>
               </CardContent>
             </Card>
           </div>
