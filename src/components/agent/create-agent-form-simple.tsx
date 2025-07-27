@@ -75,8 +75,20 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
     
     // Debug: Log file details
     addDebugLog(`📁 Files changed: ${newFiles.length} files`);
+    
+    // Debug each file individually
+    newFiles.forEach((f, index) => {
+      addDebugLog(`  📄 File ${index + 1}: "${f.name}" (${f.size} bytes, type: ${f.type}, valid: ${f.valid})`);
+      if (!f.name) {
+        addDebugLog(`    ⚠️ WARNING: File ${index + 1} has no name!`);
+      }
+      if (f.error) {
+        addDebugLog(`    ❌ Error: ${f.error}`);
+      }
+    });
+    
     const fileDetails = newFiles.map(f => ({
-      name: f.name,
+      name: f.name || 'MISSING_NAME',
       size: f.size,
       type: f.type,
       valid: f.valid,
@@ -112,23 +124,30 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
       addDebugLog(`🔍 Frontend File Processing:`);
       addDebugLog(`  - Total files to process: ${files.length}`);
       
-      files.forEach((file) => {
-        addDebugLog(`🔍 Processing file: ${file.name} (valid: ${file.valid}, size: ${file.size}, type: ${file.type})`);
+      files.forEach((file, index) => {
+        addDebugLog(`🔍 Processing file ${index + 1}: "${file.name}" (valid: ${file.valid}, size: ${file.size}, type: ${file.type})`);
+        
+        // Check for missing file name
+        if (!file.name) {
+          addDebugLog(`  🚨 CRITICAL: File ${index + 1} has no name! Cannot add to FormData.`);
+          invalidFileCount++;
+          return;
+        }
         
         if (file.size === 0) {
           emptyFileCount++;
-          addDebugLog(`  ⚠️ File ${file.name} is empty (0 bytes) - skipping`);
+          addDebugLog(`  ⚠️ File "${file.name}" is empty (0 bytes) - skipping`);
           return;
         }
         
         if (file.valid) {
           // Use filename as the key (not 'files')
           formDataUpload.append(file.name, file);
-          addDebugLog(`  ✅ Added file to FormData: ${file.name} (${file.size} bytes)`);
+          addDebugLog(`  ✅ Added to FormData: key="${file.name}", file="${file.name}" (${file.size} bytes)`);
           validFileCount++;
         } else {
           invalidFileCount++;
-          addDebugLog(`  ❌ Skipping invalid file: ${file.name} - ${file.error}`);
+          addDebugLog(`  ❌ Skipping invalid file: "${file.name}" - ${file.error}`);
         }
       });
 
