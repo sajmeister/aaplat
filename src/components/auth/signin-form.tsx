@@ -29,7 +29,7 @@ export function SignInForm() {
             </p>
           </div>
           <p className="text-xs text-amber-700 mt-1">
-            Only authorized users (sajmeister) can access this application.
+            Only authorized users can access this application.
           </p>
         </div>
       </CardHeader>
