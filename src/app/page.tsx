@@ -154,28 +154,7 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Development Status */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-white/50 rounded-lg mx-4">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900 mb-8">
-              Development Progress
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
-                <h3 className="font-semibold text-green-800">✅ Week 1 Complete</h3>
-                <p className="text-sm text-green-600">Next.js 15, Database, UI Setup</p>
-              </div>
-              <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
-                <h3 className="font-semibold text-green-800">✅ Week 2 Complete</h3>
-                <p className="text-sm text-green-600">Authentication & Core API</p>
-              </div>
-              <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                <h3 className="font-semibold text-blue-800">🚧 Week 3 In Progress</h3>
-                <p className="text-sm text-blue-600">Agent Management System</p>
-              </div>
-            </div>
-          </div>
-        </div>
+
       </main>
     </div>
   );
