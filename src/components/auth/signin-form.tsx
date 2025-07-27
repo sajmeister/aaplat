@@ -21,6 +21,17 @@ export function SignInForm() {
         <CardDescription>
           Choose your preferred sign-in method
         </CardDescription>
+        <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-md">
+          <div className="flex items-center space-x-2">
+            <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+            <p className="text-sm text-amber-800 font-medium">
+              🔒 Restricted Access
+            </p>
+          </div>
+          <p className="text-xs text-amber-700 mt-1">
+            Only authorized users (sajmeister) can access this application.
+          </p>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button

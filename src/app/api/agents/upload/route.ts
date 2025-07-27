@@ -11,6 +11,21 @@ import {
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const session = await withAuth(request);
   
+  // 🔐 Authorization check: Only allow "sajmeister" to upload files
+  const allowedUser = 'sajmeister';
+  const userName = session.user!.name!.toLowerCase();
+  const userEmail = session.user!.email!.toLowerCase();
+  
+  const isAuthorized = userName.includes(allowedUser) || userEmail.includes(allowedUser);
+  
+  console.log('🔐 File upload authorization check:');
+  console.log(`  - User: ${session.user!.name} (${session.user!.email})`);
+  console.log(`  - Authorized: ${isAuthorized}`);
+  
+  if (!isAuthorized) {
+    throw new ApiError('Access denied: Only authorized users can upload agent files', 403);
+  }
+  
   try {
     const formData = await request.formData();
     const agentId = formData.get('agentId') as string;

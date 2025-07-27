@@ -97,6 +97,21 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const session = await withAuth(request);
   const data: CreateAgentInput = await validateRequestBody(request, createAgentSchema);
 
+  // 🔐 Authorization check: Only allow "sajmeister" to create agents
+  const allowedUser = 'sajmeister';
+  const userName = session.user!.name!.toLowerCase();
+  const userEmail = session.user!.email!.toLowerCase();
+  
+  const isAuthorized = userName.includes(allowedUser) || userEmail.includes(allowedUser);
+  
+  console.log('🔐 Agent creation authorization check:');
+  console.log(`  - User: ${session.user!.name} (${session.user!.email})`);
+  console.log(`  - Authorized: ${isAuthorized}`);
+  
+  if (!isAuthorized) {
+    throw new ApiError('Access denied: Only authorized users can create agents', 403);
+  }
+
   // Generate a unique ID
   const agentId = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 

@@ -49,6 +49,40 @@ export const authConfig: NextAuthConfig = {
     error: '/auth/error',
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      // Restrict access to only "sajmeister" user
+      const allowedUser = 'sajmeister';
+      
+      console.log('🔐 Sign-in attempt:');
+      console.log('  - User email:', user.email);
+      console.log('  - User name:', user.name);
+      console.log('  - Profile login:', profile?.login);
+      
+      // Check GitHub username (most reliable)
+      if (account?.provider === 'github' && profile?.login) {
+        const isAllowed = profile.login === allowedUser;
+        console.log(`  - GitHub login: ${profile.login} (allowed: ${isAllowed})`);
+        return isAllowed ? true : '/auth/access-denied';
+      }
+      
+      // Check Google email (if using Google auth)
+      if (account?.provider === 'google' && user.email) {
+        const isAllowed = user.email.includes('sajmeister') || (user.name?.toLowerCase().includes('sajmeister') ?? false);
+        console.log(`  - Google user: ${user.email} (allowed: ${isAllowed})`);
+        return isAllowed ? true : '/auth/access-denied';
+      }
+      
+      // Fallback: check user name - always return boolean
+      const nameCheck = user.name?.toLowerCase().includes('sajmeister') ?? false;
+      console.log(`  - Name-based check: ${user.name} (allowed: ${nameCheck})`);
+      
+      // If not allowed, redirect to access denied page
+      if (!nameCheck) {
+        return '/auth/access-denied';
+      }
+      
+      return true;
+    },
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
