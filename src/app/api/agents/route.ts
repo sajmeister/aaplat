@@ -101,9 +101,18 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   const agentId = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   // Ensure user exists in database (for foreign key constraint)
+  // Handle potential unique constraint on email by using INSERT OR REPLACE
   await db.run(sql`
-    INSERT OR IGNORE INTO users (id, email, name, image) 
-    VALUES (${session.user!.id!}, ${session.user!.email!}, ${session.user!.name!}, ${session.user!.image!})
+    INSERT OR REPLACE INTO users (id, email, name, image, email_verified, created_at, updated_at) 
+    VALUES (
+      ${session.user!.id!}, 
+      ${session.user!.email!}, 
+      ${session.user!.name!}, 
+      ${session.user!.image!}, 
+      NULL, 
+      unixepoch(), 
+      unixepoch()
+    )
   `);
 
   // Create the agent using raw SQL to bypass Drizzle field auto-inclusion
