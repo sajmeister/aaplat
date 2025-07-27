@@ -53,8 +53,7 @@ export default async function HomePage() {
               <span className="block text-blue-600">with Ease</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-              The modern SaaS platform for deploying, managing, and scaling AI agents. 
-              Built with Next.js 15, TypeScript, and Railway.app integration.
+              The modern SaaS platform for deploying, managing, and scaling AI agents.
             </p>
             
             {!session && (
@@ -166,13 +165,13 @@ export default async function HomePage() {
                 <h3 className="font-semibold text-green-800">✅ Week 1 Complete</h3>
                 <p className="text-sm text-green-600">Next.js 15, Database, UI Setup</p>
               </div>
-              <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
-                <h3 className="font-semibold text-blue-800">🚧 Week 2 In Progress</h3>
-                <p className="text-sm text-blue-600">Authentication & Core API</p>
+              <div className="p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                <h3 className="font-semibold text-green-800">✅ Week 2 Complete</h3>
+                <p className="text-sm text-green-600">Authentication & Core API</p>
               </div>
-              <div className="p-4 bg-gray-50 rounded-lg border-2 border-gray-200">
-                <h3 className="font-semibold text-gray-800">📋 Week 3 Next</h3>
-                <p className="text-sm text-gray-600">Agent Management System</p>
+              <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                <h3 className="font-semibold text-blue-800">🚧 Week 3 In Progress</h3>
+                <p className="text-sm text-blue-600">Agent Management System</p>
               </div>
             </div>
           </div>
