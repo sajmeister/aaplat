@@ -74,8 +74,8 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                <Badge variant="outline">📚 Week 3: Agent Management (Coming Soon)</Badge>
-                <Badge variant="outline">🚀 Week 4: Railway Deployment (Coming Soon)</Badge>
+                <Badge variant="outline">📚 Agent Management (Coming Soon)</Badge>
+                <Badge variant="outline">🚀 Railway Deployment (Coming Soon)</Badge>
                 <Badge variant="outline">🏪 Agent Marketplace (Coming Soon)</Badge>
               </div>
             </CardContent>
