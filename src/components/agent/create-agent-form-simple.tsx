@@ -158,6 +158,16 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
       addDebugLog(`  - Empty files: ${emptyFileCount}`);
       addDebugLog(`  - Files added to FormData: ${validFileCount}`);
       
+      // Debug FormData contents
+      addDebugLog(`🔍 FormData Contents Debug:`);
+      for (const [key, value] of formDataUpload.entries()) {
+        if (value instanceof File) {
+          addDebugLog(`  - FormData["${key}"] = File("${value.name}", ${value.size} bytes)`);
+        } else {
+          addDebugLog(`  - FormData["${key}"] = "${value}"`);
+        }
+      }
+      
       if (validFileCount === 0) {
         addDebugLog('⚠️ No valid files to upload');
         return;
@@ -165,10 +175,12 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
 
       setUploadProgress('Uploading to cloud storage...');
       addDebugLog('📤 Sending POST request to /api/agents/upload');
+      addDebugLog(`📤 Request body type: FormData with ${Array.from(formDataUpload.entries()).length} entries`);
 
       const response = await fetch('/api/agents/upload', {
         method: 'POST',
         body: formDataUpload,
+        // Note: Don't set Content-Type header - let browser set it with boundary for FormData
       });
 
       addDebugLog(`📡 Upload response status: ${response.status} ${response.statusText}`);

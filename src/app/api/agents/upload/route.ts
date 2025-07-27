@@ -38,7 +38,14 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     const files: { [key: string]: File } = {};
     
     console.log('🔍 Form Data Debug:');
-    console.log('- Form data entries count:', Array.from(formData.entries()).length);
+    const allEntries = Array.from(formData.entries());
+    console.log('- Form data entries count:', allEntries.length);
+    console.log('- Raw entries:', allEntries.map(([key, value]) => ({
+      key,
+      valueType: value instanceof File ? 'File' : typeof value,
+      fileName: value instanceof File ? value.name : 'N/A',
+      fileSize: value instanceof File ? value.size : 'N/A'
+    })));
     
     let fileCount = 0;
     let validFileCount = 0;
