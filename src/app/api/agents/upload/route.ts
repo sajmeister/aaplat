@@ -65,13 +65,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
                         process.env.CLOUDFLARE_R2_BUCKET_NAME && 
                         process.env.CLOUDFLARE_R2_ENDPOINT;
     
+    console.log('🔍 R2 Configuration Status:');
+    console.log('- R2_ACCESS_KEY_ID:', !!process.env.CLOUDFLARE_R2_ACCESS_KEY_ID);
+    console.log('- R2_SECRET_ACCESS_KEY:', !!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY);
+    console.log('- R2_BUCKET_NAME:', !!process.env.CLOUDFLARE_R2_BUCKET_NAME);
+    console.log('- R2_ENDPOINT:', !!process.env.CLOUDFLARE_R2_ENDPOINT);
+    console.log('- Overall R2 Configured:', r2Configured);
+    
     if (!r2Configured) {
       console.log('⚠️ Cloudflare R2 not configured, skipping file upload');
-      console.log('- R2_ACCESS_KEY_ID:', !!process.env.CLOUDFLARE_R2_ACCESS_KEY_ID);
-      console.log('- R2_SECRET_ACCESS_KEY:', !!process.env.CLOUDFLARE_R2_SECRET_ACCESS_KEY);
-      console.log('- R2_BUCKET_NAME:', !!process.env.CLOUDFLARE_R2_BUCKET_NAME);
-      console.log('- R2_ENDPOINT:', !!process.env.CLOUDFLARE_R2_ENDPOINT);
-      
       return createSuccessResponse({
         agentId,
         files: { message: 'Files received but not uploaded (R2 storage not configured)' },
@@ -80,17 +82,33 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     }
 
     // Upload files to R2
-    const uploadResult = await CloudflareR2Service.uploadAgentFiles(
-      agentId,
-      files,
-      session.user!.id!
-    );
+    console.log('🚀 R2 is configured - attempting file upload...');
+    console.log(`📤 Uploading ${Object.keys(files).length} files to R2...`);
+    
+    try {
+      const uploadResult = await CloudflareR2Service.uploadAgentFiles(
+        agentId,
+        files,
+        session.user!.id!
+      );
 
-    return createSuccessResponse({
-      agentId,
-      files: uploadResult,
-      message: `Successfully uploaded ${Object.keys(files).length} files`,
-    });
+      console.log('✅ R2 upload successful:', uploadResult);
+      
+      return createSuccessResponse({
+        agentId,
+        files: uploadResult,
+        message: `Successfully uploaded ${Object.keys(files).length} files to Cloudflare R2`,
+      });
+    } catch (uploadError) {
+      console.error('❌ R2 upload failed:', uploadError);
+      
+      // Fallback: Return success but indicate upload failed
+      return createSuccessResponse({
+        agentId,
+        files: { error: 'Upload failed', details: uploadError instanceof Error ? uploadError.message : 'Unknown error' },
+        message: `Agent created but file upload failed (${Object.keys(files).length} files) - ${uploadError instanceof Error ? uploadError.message : 'R2 upload error'}`,
+      });
+    }
 
   } catch (error) {
     console.error('Agent upload error:', error);
