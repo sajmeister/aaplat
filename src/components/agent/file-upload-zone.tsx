@@ -28,15 +28,27 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
   const processFiles = useCallback((fileList: FileList) => {
     const newFiles: FileWithPreview[] = [];
     
-    Array.from(fileList).forEach((file) => {
+    console.log('🔍 FileUploadZone: Processing FileList with', fileList.length, 'files');
+    
+    Array.from(fileList).forEach((file, index) => {
+      console.log(`🔍 FileUploadZone: Processing file ${index + 1}:`, {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
       // Ensure file has required properties
       if (!file || !file.name) {
-        console.warn('Invalid file object:', file);
+        console.warn('🚨 FileUploadZone: Invalid file object or missing name:', file);
         return;
       }
 
       const validation = validateAgentFile(file);
       const fileType = getAgentFileType(file.name);
+      
+      console.log(`🔍 FileUploadZone: File "${file.name}" validation:`, validation);
+      console.log(`🔍 FileUploadZone: File "${file.name}" type determined:`, fileType);
       
       const fileWithPreview: FileWithPreview = {
         ...file,
@@ -44,14 +56,30 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
         valid: validation.valid,
         error: validation.error,
         type: fileType,
-        // Ensure size is always a number
+        // Explicitly preserve critical File properties
+        name: file.name,
         size: typeof file.size === 'number' ? file.size : 0,
+        lastModified: file.lastModified,
+        webkitRelativePath: file.webkitRelativePath,
       };
+
+      console.log(`✅ FileUploadZone: Created FileWithPreview for "${file.name}":`, {
+        name: fileWithPreview.name,
+        size: fileWithPreview.size,
+        type: fileWithPreview.type,
+        valid: fileWithPreview.valid,
+        id: fileWithPreview.id
+      });
 
       newFiles.push(fileWithPreview);
     });
 
     const updatedFiles = [...files, ...newFiles].slice(0, maxFiles);
+    
+    console.log(`📤 FileUploadZone: Sending ${updatedFiles.length} files to parent:`, 
+      updatedFiles.map(f => ({ name: f.name, size: f.size, type: f.type, valid: f.valid }))
+    );
+    
     setFiles(updatedFiles);
     onFilesChange(updatedFiles);
   }, [files, maxFiles, onFilesChange]);
@@ -63,7 +91,10 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
     if (disabled) return;
     
     const droppedFiles = e.dataTransfer.files;
+    console.log('🎯 FileUploadZone: Files dropped, count:', droppedFiles.length);
+    
     if (droppedFiles.length > 0) {
+      console.log('🎯 FileUploadZone: Dropped files:', Array.from(droppedFiles).map(f => ({ name: f.name, size: f.size })));
       processFiles(droppedFiles);
     }
   }, [disabled, processFiles]);
@@ -81,7 +112,10 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
 
   const handleFileInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
-    if (selectedFiles) {
+    console.log('📁 FileUploadZone: File input changed, files:', selectedFiles ? selectedFiles.length : 0);
+    
+    if (selectedFiles && selectedFiles.length > 0) {
+      console.log('📁 FileUploadZone: Selected files:', Array.from(selectedFiles).map(f => ({ name: f.name, size: f.size })));
       processFiles(selectedFiles);
     }
     // Reset input value to allow same file selection
