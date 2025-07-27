@@ -21,14 +21,14 @@ RUN adduser -S nodejs -u 1001
 RUN chown -R nodejs:nodejs /app
 USER nodejs
 
-# Expose port 3000
-EXPOSE 3000
+# Expose port 4000
+EXPOSE 4000
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "
     const http = require('http');
-    const options = { hostname: 'localhost', port: 3000, path: '/health', timeout: 2000 };
+    const options = { hostname: 'localhost', port: 4000, path: '/health', timeout: 2000 };
     const req = http.request(options, (res) => { 
       if (res.statusCode === 200) process.exit(0); 
       else process.exit(1); 
