@@ -30,6 +30,8 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string>('');
+  const [success, setSuccess] = useState<string>('');
   
   // Form state
   const [formData, setFormData] = useState<CreateAgentInput>({
@@ -87,8 +89,18 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Clear previous messages
+    setError('');
+    setSuccess('');
+    
+    // Validation
     if (!formData.name.trim()) {
-      alert('Please enter an agent name');
+      setError('Please enter an agent name');
+      return;
+    }
+    
+    if (!formData.description?.trim()) {
+      setError('Please enter an agent description');
       return;
     }
 
@@ -101,21 +113,43 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
       
       // Upload files if any
       if (files.length > 0) {
+        setUploadProgress('Uploading files...');
         await uploadFiles(agent.id);
       }
 
       setUploadProgress('');
-      onSuccess?.(agent.id);
-    } catch (error) {
+      setSuccess('Agent created successfully! 🎉');
+      
+      // Wait a moment to show success message, then call onSuccess
+      setTimeout(() => {
+        onSuccess?.(agent.id);
+      }, 1500);
+      
+    } catch (error: unknown) {
       console.error('Failed to create agent:', error);
       setUploadProgress('');
+      
+      // Better error handling
+      if (error && typeof error === 'object' && 'response' in error) {
+        const responseError = error as { response?: { data?: { error?: string } } };
+        if (responseError.response?.data?.error) {
+          setError(`Failed to create agent: ${responseError.response.data.error}`);
+        } else {
+          setError('Failed to create agent. Please check your input and try again.');
+        }
+      } else if (error instanceof Error) {
+        setError(`Failed to create agent: ${error.message}`);
+      } else {
+        setError('Failed to create agent. Please check your input and try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const validFiles = files.filter(f => f.valid);
-  const hasRequiredFiles = validFiles.some(f => f.type === 'source');
+  // Allow creating agents without files - files are optional
+  const hasRequiredFiles = true; // Always allow submission since files are optional
 
   const runtimeOptions = [
     { value: 'python', label: 'Python', description: 'For AI/ML, data processing, automation' },
@@ -144,6 +178,26 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
             <p className="text-sm text-blue-800">
               {uploadProgress || 'Creating agent...'}
             </p>
+          </div>
+        </Card>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <Card className="p-4 border-red-200 bg-red-50">
+          <div className="flex items-center space-x-3">
+            <AlertCircle className="h-5 w-5 text-red-600" />
+            <p className="text-sm text-red-800">{error}</p>
+          </div>
+        </Card>
+      )}
+
+      {/* Success Message */}
+      {success && (
+        <Card className="p-4 border-green-200 bg-green-50">
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            <p className="text-sm text-green-800">{success}</p>
           </div>
         </Card>
       )}
@@ -254,15 +308,14 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900">Agent Files</h3>
             <div className="flex items-center space-x-2">
-              {hasRequiredFiles ? (
+              {validFiles.length > 0 ? (
                 <Badge className="bg-green-100 text-green-800">
                   <CheckCircle className="h-3 w-3 mr-1" />
-                  Ready to deploy
+                  {validFiles.length} file{validFiles.length > 1 ? 's' : ''} ready
                 </Badge>
               ) : (
-                <Badge className="bg-yellow-100 text-yellow-800">
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                  Needs source files
+                <Badge className="bg-gray-100 text-gray-600">
+                  Optional - Add files to deploy
                 </Badge>
               )}
             </div>
