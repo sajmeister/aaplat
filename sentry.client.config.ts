@@ -16,13 +16,8 @@ Sentry.init({
   // Environment
   environment: process.env.NODE_ENV,
   
-  // Integrations
-  integrations: [
-    new Sentry.Replay({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-  ],
+  // Integrations - Replay will be auto-included in @sentry/nextjs
+  integrations: [],
   
   // Filter out development and testing errors
   beforeSend(event) {

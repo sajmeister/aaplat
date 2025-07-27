@@ -94,7 +94,7 @@ export function useAgentSearch(searchTerm: string) {
 
 export function useAgentsByCategory(category: string) {
   return useAgents({
-    category: category as any,
+    category: category as AgentQueryInput['category'],
     isPublic: true,
   });
 } 

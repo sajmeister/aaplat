@@ -15,15 +15,7 @@ export function UserProfile({ session }: UserProfileProps) {
     signOut({ callbackUrl: '/' });
   };
 
-  const getInitials = (name?: string | null) => {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+
 
   return (
     <div className="space-y-4">
