@@ -107,8 +107,6 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
       id: agentId,
       ...data,
       userId: session.user!.id!,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     })
     .returning();
 
