@@ -1,8 +1,8 @@
 const express = require('express');
 const app = express();
 
-// Get port from environment variable or default to 3000
-const PORT = process.env.PORT || 3000;
+// Get port from environment variable or default to 4000
+const PORT = process.env.PORT || 4000;
 
 // Middleware to parse JSON requests
 app.use(express.json());
