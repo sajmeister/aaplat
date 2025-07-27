@@ -13,6 +13,7 @@ interface FileWithPreview extends File {
   valid: boolean;
   error?: string;
   type: 'source' | 'config' | 'documentation' | 'dependency' | 'docker';
+  originalFile: File;
 }
 
 interface FileUploadZoneProps {
@@ -61,6 +62,8 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
         size: typeof file.size === 'number' ? file.size : 0,
         lastModified: file.lastModified,
         webkitRelativePath: file.webkitRelativePath,
+        // CRITICAL: Keep reference to original File object
+        originalFile: file,
       };
 
       console.log(`✅ FileUploadZone: Created FileWithPreview for "${file.name}":`, {

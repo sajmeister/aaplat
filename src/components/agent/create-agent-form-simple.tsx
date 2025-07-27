@@ -18,6 +18,7 @@ interface FileWithPreview extends File {
   valid: boolean;
   error?: string;
   type: 'source' | 'config' | 'documentation' | 'dependency' | 'docker';
+  originalFile: File;
 }
 
 interface CreateAgentFormProps {
@@ -141,9 +142,11 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
         }
         
         if (file.valid) {
-          // Use filename as the key (not 'files')
-          formDataUpload.append(file.name, file);
+          // CRITICAL FIX: Use the original File object, not the FileWithPreview object
+          // The FileWithPreview spread operator destroys the File prototype
+          formDataUpload.append(file.name, file.originalFile);
           addDebugLog(`  ✅ Added to FormData: key="${file.name}", file="${file.name}" (${file.size} bytes)`);
+          addDebugLog(`    Original file instanceof File: ${file.originalFile instanceof File}`);
           validFileCount++;
         } else {
           invalidFileCount++;
@@ -164,6 +167,7 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
         if (value instanceof File) {
           addDebugLog(`  - FormData["${key}"] = File("${value.name}", ${value.size} bytes, type: "${value.type}")`);
           addDebugLog(`    File properties: lastModified=${value.lastModified}, webkitRelativePath="${value.webkitRelativePath}"`);
+          addDebugLog(`    instanceof File: ${value instanceof File}`);
         } else {
           addDebugLog(`  - FormData["${key}"] = "${value}" (${typeof value})`);
         }
