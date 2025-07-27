@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { eq, and, like, or } from 'drizzle-orm';
+import { eq, and, like, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { agents } from '@/lib/db/schema';
 import { 
@@ -100,21 +100,22 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Generate a unique ID
   const agentId = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Create the agent with basic required fields only
-  const newAgent = await db
-    .insert(agents)
-    .values({
-      id: agentId,
-      name: data.name,
-      category: data.category,
-      runtime: data.runtime,
-      userId: session.user!.id!,
-    })
-    .returning();
+  // Create the agent using raw SQL to bypass Drizzle field auto-inclusion
+  const newAgent = await db.run(sql`
+    INSERT INTO agents (id, name, category, runtime, user_id) 
+    VALUES (${agentId}, ${data.name}, ${data.category}, ${data.runtime}, ${session.user!.id!})
+  `);
 
-  if (!newAgent[0]) {
+  // Fetch the created agent
+  const createdAgent = await db
+    .select()
+    .from(agents)
+    .where(eq(agents.id, agentId))
+    .limit(1);
+
+  if (!createdAgent[0]) {
     throw new ApiError('Failed to create agent', 500);
   }
 
-  return createSuccessResponse(newAgent[0], 201);
+  return createSuccessResponse(createdAgent[0], 201);
 }); 
