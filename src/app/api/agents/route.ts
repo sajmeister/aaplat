@@ -100,20 +100,15 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   // Generate a unique ID
   const agentId = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-  // Create the agent - only insert fields WITHOUT database defaults
+  // Create the agent with basic required fields only
   const newAgent = await db
     .insert(agents)
     .values({
       id: agentId,
       name: data.name,
-      description: data.description,
       category: data.category,
       runtime: data.runtime,
       userId: session.user!.id!,
-      dockerImage: data.dockerImage,
-      sourceCodeUrl: data.sourceCodeUrl,
-      configSchema: data.configSchema,
-      // Let database defaults handle: version, isPublic, downloads, rating, createdAt, updatedAt
     })
     .returning();
 
