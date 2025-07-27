@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Bot, Cloud, Shield, Zap } from 'lucide-react';
+import { ArrowRight, Bot, Cloud, Shield, Zap, Upload } from 'lucide-react';
 
 export default async function HomePage() {
   const session = await auth();
@@ -70,15 +70,20 @@ export default async function HomePage() {
 
             {session && (
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link href="/dashboard">
+                <Link href="/dashboard/agents/create">
                   <Button size="lg">
-                    Go to Dashboard
+                    Create Agent
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href="/marketplace">
                   <Button variant="outline" size="lg">
                     Browse Agents
+                  </Button>
+                </Link>
+                <Link href="/dashboard">
+                  <Button variant="ghost" size="lg">
+                    Dashboard
                   </Button>
                 </Link>
               </div>
@@ -97,7 +102,7 @@ export default async function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
             <Card>
               <CardHeader>
                 <Zap className="h-8 w-8 text-blue-600 mb-2" />
@@ -139,6 +144,19 @@ export default async function HomePage() {
 
             <Card>
               <CardHeader>
+                <Upload className="h-8 w-8 text-indigo-600 mb-2" />
+                <CardTitle>Agent Upload</CardTitle>
+                <CardDescription>
+                  Upload and manage AI agents with drag-and-drop interface
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Badge variant="default">Available ✅</Badge>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
                 <Bot className="h-8 w-8 text-orange-600 mb-2" />
                 <CardTitle>Agent Marketplace</CardTitle>
                 <CardDescription>
@@ -146,7 +164,7 @@ export default async function HomePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Badge variant="secondary">Coming Soon</Badge>
+                <Badge variant="default">Available ✅</Badge>
               </CardContent>
             </Card>
           </div>

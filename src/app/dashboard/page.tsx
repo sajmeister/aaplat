@@ -2,7 +2,10 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/lib/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { UserProfile } from '@/components/dashboard/user-profile';
+import { Plus, Upload, Store } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function DashboardPage() {
   const session = await auth();
@@ -73,10 +76,22 @@ export default async function DashboardPage() {
               <CardDescription>Get started with your first agent</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <Badge variant="outline">📚 Agent Management (Coming Soon)</Badge>
-                <Badge variant="outline">🚀 Railway Deployment (Coming Soon)</Badge>
-                <Badge variant="outline">🏪 Agent Marketplace (Coming Soon)</Badge>
+              <div className="space-y-3">
+                <Link href="/dashboard/agents/create">
+                  <Button className="w-full justify-start">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create New Agent
+                  </Button>
+                </Link>
+                <Link href="/marketplace">
+                  <Button variant="outline" className="w-full justify-start">
+                    <Store className="h-4 w-4 mr-2" />
+                    Browse Agent Marketplace
+                  </Button>
+                </Link>
+                <div className="pt-2">
+                  <Badge variant="outline">🚀 Railway Deployment (Coming Soon)</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>
