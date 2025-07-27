@@ -7,6 +7,9 @@ import {
   ApiError
 } from '@/lib/api-utils';
 
+// Force Node.js runtime for better FormData handling
+export const runtime = 'nodejs';
+
 // POST /api/agents/upload - Upload agent files
 export const POST = withErrorHandling(async (request: NextRequest) => {
   const session = await withAuth(request);
@@ -124,6 +127,19 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
           ? 'Agent created successfully (no files were uploaded - no valid files detected in request)'
           : 'Agent created successfully (no files uploaded - R2 storage not configured)',
         r2Config: r2ConfigStatus,
+        debugInfo: {
+          formDataEntryCount: allEntries.length,
+          fileCount,
+          validFileCount,
+          invalidFileCount,
+          emptyFileCount,
+          rawEntries: allEntries.map(([key, value]) => ({
+            key,
+            valueType: value instanceof File ? 'File' : typeof value,
+            fileName: value instanceof File ? value.name : 'N/A',
+            fileSize: value instanceof File ? value.size : 'N/A'
+          }))
+        }
       });
     }
     

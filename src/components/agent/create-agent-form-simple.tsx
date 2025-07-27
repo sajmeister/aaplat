@@ -162,9 +162,10 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
       addDebugLog(`🔍 FormData Contents Debug:`);
       for (const [key, value] of formDataUpload.entries()) {
         if (value instanceof File) {
-          addDebugLog(`  - FormData["${key}"] = File("${value.name}", ${value.size} bytes)`);
+          addDebugLog(`  - FormData["${key}"] = File("${value.name}", ${value.size} bytes, type: "${value.type}")`);
+          addDebugLog(`    File properties: lastModified=${value.lastModified}, webkitRelativePath="${value.webkitRelativePath}"`);
         } else {
-          addDebugLog(`  - FormData["${key}"] = "${value}"`);
+          addDebugLog(`  - FormData["${key}"] = "${value}" (${typeof value})`);
         }
       }
       
