@@ -33,6 +33,16 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
   
+  // Debug state
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const [debugData, setDebugData] = useState<{
+    r2Config?: any;
+    uploadResponse?: any;
+    fileDetails?: any[];
+    errors?: string[];
+  }>({});
+  
   // Form state
   const [formData, setFormData] = useState<CreateAgentInput>({
     name: '',
@@ -45,16 +55,42 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
 
   const createAgentMutation = useCreateAgent();
 
+  // Debug helpers
+  const addDebugLog = (message: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    setDebugLogs(prev => [...prev, `[${timestamp}] ${message}`]);
+  };
+
+  const updateDebugData = (key: string, value: any) => {
+    setDebugData(prev => ({ ...prev, [key]: value }));
+  };
+
+  const clearDebug = () => {
+    setDebugLogs([]);
+    setDebugData({});
+  };
+
   const handleFilesChange = (newFiles: FileWithPreview[]) => {
     setFiles(newFiles);
+    
+    // Debug: Log file details
+    addDebugLog(`📁 Files changed: ${newFiles.length} files`);
+    const fileDetails = newFiles.map(f => ({
+      name: f.name,
+      size: f.size,
+      type: f.type,
+      valid: f.valid,
+      error: f.error
+    }));
+    updateDebugData('fileDetails', fileDetails);
   };
 
   const uploadFiles = async (agentId: string): Promise<void> => {
-    console.log(`🚀 uploadFiles called with agentId: ${agentId}`);
-    console.log(`📊 Files available: ${files.length}`);
+    addDebugLog(`🚀 Starting file upload for agent: ${agentId}`);
+    addDebugLog(`📊 Files available: ${files.length}`);
     
     if (files.length === 0) {
-      console.log('⚠️ No files to upload');
+      addDebugLog('⚠️ No files to upload');
       return;
     }
 
@@ -64,50 +100,54 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
     try {
       const formDataUpload = new FormData();
       formDataUpload.append('agentId', agentId);
-      console.log(`📝 Added agentId to FormData: ${agentId}`);
+      addDebugLog(`📝 Added agentId to FormData: ${agentId}`);
 
       let validFileCount = 0;
       files.forEach((file) => {
-        console.log(`🔍 Processing file: ${file.name} (valid: ${file.valid}, size: ${file.size})`);
+        addDebugLog(`🔍 Processing file: ${file.name} (valid: ${file.valid}, size: ${file.size})`);
         if (file.valid) {
           // Use filename as the key (not 'files')
           formDataUpload.append(file.name, file);
-          console.log(`📁 Added file to FormData: ${file.name} (${file.size} bytes)`);
+          addDebugLog(`📁 Added file to FormData: ${file.name} (${file.size} bytes)`);
           validFileCount++;
         } else {
-          console.log(`❌ Skipping invalid file: ${file.name} - ${file.error}`);
+          addDebugLog(`❌ Skipping invalid file: ${file.name} - ${file.error}`);
         }
       });
 
-      console.log(`📊 Total valid files added to FormData: ${validFileCount}`);
+      addDebugLog(`📊 Total valid files added to FormData: ${validFileCount}`);
       
       if (validFileCount === 0) {
-        console.log('⚠️ No valid files to upload');
+        addDebugLog('⚠️ No valid files to upload');
         return;
       }
 
       setUploadProgress('Uploading to cloud storage...');
-      console.log('📤 Sending POST request to /api/agents/upload');
+      addDebugLog('📤 Sending POST request to /api/agents/upload');
 
       const response = await fetch('/api/agents/upload', {
         method: 'POST',
         body: formDataUpload,
       });
 
-      console.log(`📡 Upload response status: ${response.status} ${response.statusText}`);
+      addDebugLog(`📡 Upload response status: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
         const error = await response.json();
-        console.error('❌ Upload failed:', error);
+        addDebugLog(`❌ Upload failed: ${JSON.stringify(error)}`);
+        updateDebugData('uploadResponse', { status: response.status, error });
+        updateDebugData('errors', [error.error || 'Upload failed']);
         throw new Error(error.error || 'Upload failed');
       }
 
       const result = await response.json();
-      console.log('✅ Upload successful:', result);
+      addDebugLog(`✅ Upload successful: ${JSON.stringify(result)}`);
+      updateDebugData('uploadResponse', { status: response.status, result });
       
       setUploadProgress('Upload complete!');
     } catch (error) {
-      console.error('File upload error:', error);
+      addDebugLog(`❌ File upload error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      updateDebugData('errors', [error instanceof Error ? error.message : 'Unknown error']);
       throw error;
     } finally {
       setIsUploading(false);
@@ -117,9 +157,12 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Clear previous messages
+    // Clear previous messages and debug
     setError('');
     setSuccess('');
+    clearDebug();
+    
+    addDebugLog('🚀 Starting agent creation process');
     
     // Validation
     if (!formData.name.trim()) {
@@ -198,6 +241,63 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {/* Debug Panel */}
+      <Card className="p-4 border-purple-200 bg-purple-50">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-purple-800">🔍 Debug Panel</h3>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowDebug(!showDebug)}
+            className="text-purple-700 border-purple-300"
+          >
+            {showDebug ? 'Hide' : 'Show'} Debug Info
+          </Button>
+        </div>
+        
+        {showDebug && (
+          <div className="space-y-4">
+            {/* Debug Logs */}
+            <div>
+              <h4 className="text-xs font-medium text-purple-700 mb-2">📝 Debug Logs:</h4>
+              <div className="bg-gray-900 text-green-400 p-3 rounded-md max-h-48 overflow-y-auto font-mono text-xs">
+                {debugLogs.length > 0 ? (
+                  debugLogs.map((log, index) => (
+                    <div key={index} className="mb-1">{log}</div>
+                  ))
+                ) : (
+                  <div className="text-gray-500">No debug logs yet...</div>
+                )}
+              </div>
+            </div>
+            
+            {/* Debug Data */}
+            {Object.keys(debugData).length > 0 && (
+              <div>
+                <h4 className="text-xs font-medium text-purple-700 mb-2">📊 Debug Data:</h4>
+                <div className="bg-gray-100 p-3 rounded-md max-h-48 overflow-y-auto">
+                  <pre className="text-xs text-gray-800 whitespace-pre-wrap">
+                    {JSON.stringify(debugData, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            )}
+            
+            {/* Clear Button */}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={clearDebug}
+              className="text-purple-700 border-purple-300"
+            >
+              Clear Debug Info
+            </Button>
+          </div>
+        )}
+      </Card>
+
       {/* Progress Indicator */}
       {(isSubmitting || isUploading) && (
         <Card className="p-4 border-blue-200 bg-blue-50">
