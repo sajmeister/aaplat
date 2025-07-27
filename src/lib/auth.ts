@@ -5,6 +5,11 @@ import Google from 'next-auth/providers/google';
 import { db } from './db';
 import { accounts, sessions, users, verificationTokens } from './db/schema';
 
+// Debug environment variables
+console.log('GitHub Client ID:', process.env.GITHUB_CLIENT_ID);
+console.log('GitHub Client ID length:', process.env.GITHUB_CLIENT_ID?.length);
+console.log('GitHub Client ID (encoded):', encodeURIComponent(process.env.GITHUB_CLIENT_ID || ''));
+
 export const authConfig: NextAuthConfig = {
   adapter: DrizzleAdapter(db, {
     usersTable: users,
