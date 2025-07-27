@@ -50,7 +50,13 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
   };
 
   const uploadFiles = async (agentId: string): Promise<void> => {
-    if (files.length === 0) return;
+    console.log(`🚀 uploadFiles called with agentId: ${agentId}`);
+    console.log(`📊 Files available: ${files.length}`);
+    
+    if (files.length === 0) {
+      console.log('⚠️ No files to upload');
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress('Preparing files...');
@@ -58,25 +64,47 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
     try {
       const formDataUpload = new FormData();
       formDataUpload.append('agentId', agentId);
+      console.log(`📝 Added agentId to FormData: ${agentId}`);
 
+      let validFileCount = 0;
       files.forEach((file) => {
+        console.log(`🔍 Processing file: ${file.name} (valid: ${file.valid}, size: ${file.size})`);
         if (file.valid) {
-          formDataUpload.append('files', file);
+          // Use filename as the key (not 'files')
+          formDataUpload.append(file.name, file);
+          console.log(`📁 Added file to FormData: ${file.name} (${file.size} bytes)`);
+          validFileCount++;
+        } else {
+          console.log(`❌ Skipping invalid file: ${file.name} - ${file.error}`);
         }
       });
 
+      console.log(`📊 Total valid files added to FormData: ${validFileCount}`);
+      
+      if (validFileCount === 0) {
+        console.log('⚠️ No valid files to upload');
+        return;
+      }
+
       setUploadProgress('Uploading to cloud storage...');
+      console.log('📤 Sending POST request to /api/agents/upload');
 
       const response = await fetch('/api/agents/upload', {
         method: 'POST',
         body: formDataUpload,
       });
 
+      console.log(`📡 Upload response status: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
         const error = await response.json();
+        console.error('❌ Upload failed:', error);
         throw new Error(error.error || 'Upload failed');
       }
 
+      const result = await response.json();
+      console.log('✅ Upload successful:', result);
+      
       setUploadProgress('Upload complete!');
     } catch (error) {
       console.error('File upload error:', error);
