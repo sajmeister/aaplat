@@ -7,7 +7,13 @@ export default function CreateAgentPage() {
   const router = useRouter();
 
   const handleSuccess = (agentId: string) => {
-    router.push(`/dashboard/agents/${agentId}`);
+    // Handle different redirect types
+    if (agentId === 'dashboard') {
+      router.push('/dashboard');
+    } else {
+      // Redirect to dashboard since agent detail page doesn't exist yet
+      router.push('/dashboard');
+    }
   };
 
   const handleCancel = () => {

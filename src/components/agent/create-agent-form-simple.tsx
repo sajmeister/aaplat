@@ -146,12 +146,12 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
       }
 
       setUploadProgress('');
-      setSuccess('Agent created successfully! 🎉');
+      setSuccess('Agent created successfully! 🎉 Check console for upload details. You can create another agent or go to dashboard.');
       
-      // Wait a moment to show success message, then call onSuccess
-      setTimeout(() => {
-        onSuccess?.(agent.id);
-      }, 1500);
+      // Don't redirect automatically - let user choose
+      // setTimeout(() => {
+      //   onSuccess?.(agent.id);
+      // }, 10000);
       
     } catch (error: unknown) {
       console.error('Failed to create agent:', error);
@@ -223,9 +223,28 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
       {/* Success Message */}
       {success && (
         <Card className="p-4 border-green-200 bg-green-50">
-          <div className="flex items-center space-x-3">
-            <CheckCircle className="h-5 w-5 text-green-600" />
-            <p className="text-sm text-green-800">{success}</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="h-5 w-5 text-green-600" />
+              <p className="text-sm text-green-800">{success}</p>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => window.location.reload()}
+              >
+                Create Another
+              </Button>
+              <Button 
+                type="button"
+                size="sm"
+                onClick={() => onSuccess?.('dashboard')}
+              >
+                Go to Dashboard
+              </Button>
+            </div>
           </div>
         </Card>
       )}
