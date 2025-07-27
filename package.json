@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
+    "db:migrate-turso": "node scripts/migrate-turso.js",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
