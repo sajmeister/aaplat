@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { eq, and, like, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { agents } from '@/lib/db/schema';
+import { agents, users } from '@/lib/db/schema';
 import { 
   withAuth, 
   withErrorHandling, 
@@ -99,6 +99,12 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   // Generate a unique ID
   const agentId = `agent_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+  // Ensure user exists in database (for foreign key constraint)
+  await db.run(sql`
+    INSERT OR IGNORE INTO users (id, email, name, image) 
+    VALUES (${session.user!.id!}, ${session.user!.email!}, ${session.user!.name!}, ${session.user!.image!})
+  `);
 
   // Create the agent using raw SQL to bypass Drizzle field auto-inclusion
   const newAgent = await db.run(sql`
