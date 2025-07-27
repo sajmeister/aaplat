@@ -29,6 +29,12 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
     const newFiles: FileWithPreview[] = [];
     
     Array.from(fileList).forEach((file) => {
+      // Ensure file has required properties
+      if (!file || !file.name) {
+        console.warn('Invalid file object:', file);
+        return;
+      }
+
       const validation = validateAgentFile(file);
       const fileType = getAgentFileType(file.name);
       
@@ -38,6 +44,8 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
         valid: validation.valid,
         error: validation.error,
         type: fileType,
+        // Ensure size is always a number
+        size: typeof file.size === 'number' ? file.size : 0,
       };
 
       newFiles.push(fileWithPreview);
@@ -97,12 +105,25 @@ export function FileUploadZone({ onFilesChange, maxFiles = 10, disabled = false 
     }
   };
 
-  const formatFileSize = (bytes: number) => {
+  const formatFileSize = (bytes: number | undefined) => {
+    // Handle undefined, null, or invalid numbers
+    if (bytes === undefined || bytes === null || isNaN(bytes) || bytes < 0) {
+      return 'Unknown size';
+    }
+    
     if (bytes === 0) return '0 Bytes';
+    
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    
+    // Additional safety check for the calculation
+    const size = bytes / Math.pow(k, i);
+    if (isNaN(size) || !isFinite(size)) {
+      return 'Unknown size';
+    }
+    
+    return parseFloat(size.toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
