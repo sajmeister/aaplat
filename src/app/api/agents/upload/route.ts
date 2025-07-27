@@ -22,17 +22,32 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
     // Collect all files from form data
     const files: { [key: string]: File } = {};
     
+    console.log('🔍 Form Data Debug:');
+    console.log('- Form data entries count:', Array.from(formData.entries()).length);
+    
     for (const [key, value] of formData.entries()) {
+      console.log(`- Entry: ${key} = ${value instanceof File ? `File(${value.name}, ${value.size} bytes)` : value}`);
+      
       if (value instanceof File && value.size > 0) {
+        console.log(`  📁 Processing file: ${value.name} (${value.size} bytes)`);
+        
         // Validate each file
         const validation = validateAgentFile(value);
+        console.log(`  ✅ Validation result: ${JSON.stringify(validation)}`);
+        
         if (!validation.valid) {
           throw new ApiError(`Invalid file ${value.name}: ${validation.error}`, 400);
         }
         
         files[value.name] = value;
+        console.log(`  ✅ File added to upload list: ${value.name}`);
+      } else if (value instanceof File) {
+        console.log(`  ⚠️ File ${value.name} skipped (size: ${value.size})`);
       }
     }
+
+    console.log(`📊 Final file count: ${Object.keys(files).length}`);
+    console.log(`📊 File names: ${Object.keys(files).join(', ')}`);
 
     if (Object.keys(files).length === 0) {
       throw new ApiError('No valid files provided', 400);

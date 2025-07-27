@@ -253,15 +253,37 @@ export const validateAgentFile = (file: File): { valid: boolean; error?: string 
     '.txt', '.md', '.json', '.yaml', '.yml', '.toml', '.dockerfile'
   ];
 
+  console.log(`🔍 Validating file: ${file.name} (${file.size} bytes)`);
+
   if (file.size > MAX_FILE_SIZE) {
+    console.log(`❌ File too large: ${file.size} > ${MAX_FILE_SIZE}`);
     return { valid: false, error: 'File size exceeds 10MB limit' };
   }
 
-  const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
-  if (!ALLOWED_EXTENSIONS.includes(fileExtension) && !file.name.toLowerCase().includes('dockerfile')) {
-    return { valid: false, error: 'File type not allowed' };
+  const fileName = file.name.toLowerCase();
+  
+  // Special case for Dockerfile (no extension)
+  if (fileName === 'dockerfile' || fileName.includes('dockerfile')) {
+    console.log(`✅ Dockerfile detected: ${file.name}`);
+    return { valid: true };
   }
 
+  // Get file extension
+  const parts = file.name.split('.');
+  if (parts.length < 2) {
+    console.log(`❌ No file extension: ${file.name}`);
+    return { valid: false, error: 'File must have an extension' };
+  }
+
+  const fileExtension = '.' + parts.pop()?.toLowerCase();
+  console.log(`🔍 File extension: ${fileExtension}`);
+  
+  if (!ALLOWED_EXTENSIONS.includes(fileExtension)) {
+    console.log(`❌ Extension not allowed: ${fileExtension}. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`);
+    return { valid: false, error: `File type not allowed. Allowed extensions: ${ALLOWED_EXTENSIONS.join(', ')}` };
+  }
+
+  console.log(`✅ File validation passed: ${file.name}`);
   return { valid: true };
 };
 
