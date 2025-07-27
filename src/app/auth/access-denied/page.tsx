@@ -30,7 +30,7 @@ export default function AccessDeniedPage() {
                 🔒 Restricted Application
               </p>
               <p className="text-xs text-red-700 mt-1">
-                Only authorized users (sajmeister) can access this AI Agent Deployment Platform.
+                Only authorized users can access this AI Agent Deployment Platform.
               </p>
             </div>
           </div>
