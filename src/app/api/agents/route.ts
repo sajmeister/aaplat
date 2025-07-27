@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { eq, and, like, or, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
-import { agents, users } from '@/lib/db/schema';
+import { agents } from '@/lib/db/schema';
 import { 
   withAuth, 
   withErrorHandling, 
@@ -131,7 +131,7 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
   `);
 
   // Create the agent using raw SQL to bypass Drizzle field auto-inclusion
-  const newAgent = await db.run(sql`
+  await db.run(sql`
     INSERT INTO agents (id, name, category, runtime, user_id) 
     VALUES (${agentId}, ${data.name}, ${data.category}, ${data.runtime}, ${session.user!.id!})
   `);

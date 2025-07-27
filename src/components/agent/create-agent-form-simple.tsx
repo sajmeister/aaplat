@@ -37,9 +37,9 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
   const [showDebug, setShowDebug] = useState(false);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [debugData, setDebugData] = useState<{
-    r2Config?: any;
-    uploadResponse?: any;
-    fileDetails?: any[];
+    r2Config?: Record<string, unknown>;
+    uploadResponse?: { status: number; result?: Record<string, unknown>; error?: Record<string, unknown> };
+    fileDetails?: Array<{ name: string; size: number; type: string; valid: boolean; error?: string }>;
     errors?: string[];
   }>({});
   
@@ -61,7 +61,7 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
     setDebugLogs(prev => [...prev, `[${timestamp}] ${message}`]);
   };
 
-  const updateDebugData = (key: string, value: any) => {
+  const updateDebugData = (key: string, value: Record<string, unknown> | Array<Record<string, unknown>> | string[]) => {
     setDebugData(prev => ({ ...prev, [key]: value }));
   };
 

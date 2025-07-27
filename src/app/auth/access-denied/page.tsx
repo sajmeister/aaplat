@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,7 @@ export default function AccessDeniedPage() {
         <CardContent className="space-y-6">
           <div className="text-center space-y-3">
             <p className="text-gray-600">
-              Sorry, you don't have permission to access this application.
+              Sorry, you don&apos;t have permission to access this application.
             </p>
             <div className="p-3 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-800 font-medium">
