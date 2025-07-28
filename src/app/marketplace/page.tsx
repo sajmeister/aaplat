@@ -158,6 +158,8 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState<'newest' | 'popular' | 'rating'>('newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
 
   // Fetch agents based on current filters
   const { data: agentsData, isLoading, error } = usePublicAgents({
@@ -166,6 +168,25 @@ export default function MarketplacePage() {
     runtime: (selectedRuntime as CreateAgentInput['runtime']) || undefined,
     page,
   });
+
+  // Debug API call to check environment and database
+  const checkEnvironment = async () => {
+    try {
+      const response = await fetch('/api/agents/debug');
+      const result = await response.json();
+      setDebugInfo({
+        status: response.status,
+        result,
+        timestamp: new Date().toISOString()
+      });
+    } catch (err) {
+      setDebugInfo({
+        status: 'error',
+        error: err instanceof Error ? err.message : 'Unknown error',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
 
   const agents = agentsData?.data || [];
   const pagination = agentsData?.pagination;
@@ -330,10 +351,82 @@ export default function MarketplacePage() {
         </div>
       )}
 
+      {/* Debug Panel */}
+      <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-yellow-800">🔍 Debug Panel</h3>
+          <div className="flex space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={checkEnvironment}
+              className="text-yellow-700 border-yellow-300"
+            >
+              Check Environment
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowDebug(!showDebug)}
+              className="text-yellow-700 border-yellow-300"
+            >
+              {showDebug ? 'Hide' : 'Show'} Debug
+            </Button>
+          </div>
+        </div>
+        
+        {showDebug && (
+          <div className="space-y-4">
+            {/* API Error Details */}
+            {error && (
+              <div>
+                <h4 className="text-xs font-medium text-red-700 mb-2">❌ API Error:</h4>
+                <div className="bg-red-100 p-3 rounded-md">
+                  <pre className="text-xs text-red-800 whitespace-pre-wrap">
+                    {error instanceof Error ? error.message : JSON.stringify(error, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            )}
+            
+            {/* Environment Check Results */}
+            {debugInfo && (
+              <div>
+                <h4 className="text-xs font-medium text-blue-700 mb-2">🔧 Environment Check:</h4>
+                <div className="bg-gray-100 p-3 rounded-md max-h-64 overflow-y-auto">
+                  <pre className="text-xs text-gray-800 whitespace-pre-wrap">
+                    {JSON.stringify(debugInfo, null, 2)}
+                  </pre>
+                </div>
+              </div>
+            )}
+            
+            {/* Query Parameters */}
+            <div>
+              <h4 className="text-xs font-medium text-green-700 mb-2">📊 Current Query:</h4>
+              <div className="bg-green-100 p-3 rounded-md">
+                <pre className="text-xs text-green-800 whitespace-pre-wrap">
+                  {JSON.stringify({
+                    search: searchQuery || null,
+                    category: selectedCategory || null,
+                    runtime: selectedRuntime || null,
+                    page,
+                    isPublic: true
+                  }, null, 2)}
+                </pre>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Error State */}
       {error && (
         <div className="text-center py-12">
           <p className="text-red-600">Failed to load agents. Please try again.</p>
+          <p className="text-sm text-gray-500 mt-2">Check the debug panel above for more details.</p>
         </div>
       )}
 
