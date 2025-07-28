@@ -7,9 +7,39 @@ import {
   createSuccessResponse
 } from '@/lib/api-utils';
 
+interface DebugInfo {
+  timestamp: string;
+  environment: {
+    NODE_ENV: string | undefined;
+    DATABASE_URL: string;
+    DATABASE_AUTH_TOKEN: string;
+    NEXTAUTH_SECRET: string;
+  };
+  database: {
+    status: string;
+    error: string | null;
+    agentCount: number;
+    publicAgentCount: number;
+    sampleAgents?: Array<{
+      id: string;
+      name: string;
+      category: string;
+      runtime: string;
+      isPublic: boolean | null;
+      createdAt: Date | null;
+    }>;
+  };
+  api: {
+    status: string | number;
+    error: string | null;
+    response?: unknown;
+  };
+  overallStatus?: string;
+}
+
 // GET /api/agents/debug - Debug endpoint to check environment and database
 export const GET = withErrorHandling(async (request: NextRequest) => {
-  const debugInfo: any = {
+  const debugInfo: DebugInfo = {
     timestamp: new Date().toISOString(),
     environment: {
       NODE_ENV: process.env.NODE_ENV,

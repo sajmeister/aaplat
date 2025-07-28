@@ -159,7 +159,12 @@ export default function MarketplacePage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [page, setPage] = useState(1);
   const [showDebug, setShowDebug] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<{
+    status: number | string;
+    result?: unknown;
+    error?: string;
+    timestamp: string;
+  } | null>(null);
 
   // Fetch agents based on current filters
   const { data: agentsData, isLoading, error } = usePublicAgents({
@@ -188,7 +193,6 @@ export default function MarketplacePage() {
     }
   };
 
-  const agents = agentsData?.data || [];
   const pagination = agentsData?.pagination;
 
   // Filter and sort options
@@ -212,6 +216,7 @@ export default function MarketplacePage() {
   ];
 
   const sortedAgents = useMemo(() => {
+    const agents = agentsData?.data || [];
     if (!agents) return [];
     
     const sorted = [...agents];
@@ -229,7 +234,7 @@ export default function MarketplacePage() {
           return bTime - aTime;
         });
     }
-  }, [agents, sortBy]);
+  }, [agentsData?.data, sortBy]);
 
   const clearFilters = () => {
     setSearchQuery('');
