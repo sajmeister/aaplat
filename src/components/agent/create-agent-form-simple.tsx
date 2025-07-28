@@ -51,7 +51,7 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
     category: 'utilities',
     runtime: 'python',
     version: '1.0.0',
-    isPublic: false,
+    isPublic: true, // Default to public for marketplace visibility
   });
 
   const createAgentMutation = useCreateAgent();
@@ -520,15 +520,22 @@ export function CreateAgentForm({ onSuccess, onCancel }: CreateAgentFormProps) {
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="flex items-center space-x-2">
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <label className="flex items-start space-x-3 cursor-pointer">
               <input
                 type="checkbox"
                 checked={formData.isPublic}
                 onChange={(e) => setFormData({...formData, isPublic: e.target.checked})}
-                className="rounded"
+                className="mt-1 rounded border-blue-300 text-blue-600 focus:ring-blue-500"
               />
-              <span className="text-sm">Make this agent public in the marketplace</span>
+              <div>
+                <span className="text-sm font-medium text-blue-900">
+                  🌐 Make this agent public in the marketplace
+                </span>
+                <p className="text-xs text-blue-700 mt-1">
+                  Public agents can be discovered and used by other users. You can change this setting later.
+                </p>
+              </div>
             </label>
           </div>
         </Card>

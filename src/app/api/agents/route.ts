@@ -80,7 +80,7 @@ export const GET = withErrorHandling(async (request: NextRequest) => {
   const totalPages = Math.ceil(total / queryData.limit);
 
   return createSuccessResponse({
-    agents: result,
+    data: result,
     pagination: {
       page: queryData.page,
       limit: queryData.limit,
@@ -132,8 +132,20 @@ export const POST = withErrorHandling(async (request: NextRequest) => {
 
   // Create the agent using raw SQL to bypass Drizzle field auto-inclusion
   await db.run(sql`
-    INSERT INTO agents (id, name, category, runtime, user_id) 
-    VALUES (${agentId}, ${data.name}, ${data.category}, ${data.runtime}, ${session.user!.id!})
+    INSERT INTO agents (id, name, description, category, runtime, version, user_id, docker_image, source_code_url, config_schema, is_public) 
+    VALUES (
+      ${agentId}, 
+      ${data.name}, 
+      ${data.description || null}, 
+      ${data.category}, 
+      ${data.runtime}, 
+      ${data.version}, 
+      ${session.user!.id!}, 
+      ${data.dockerImage || null}, 
+      ${data.sourceCodeUrl || null}, 
+      ${data.configSchema || null}, 
+      ${data.isPublic}
+    )
   `);
 
   // Fetch the created agent
